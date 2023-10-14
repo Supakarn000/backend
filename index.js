@@ -1,4 +1,5 @@
 import express from "express";
+import session from "express-session";
 import mysql from "mysql";
 import cors from "cors";
 import productsRoute from "./Route/productRoute.js";
@@ -11,6 +12,13 @@ import orderhistoryRoute from './Route/orderhistoryRoute.js';
 import dataRoute from './Route/dataRoute.js';
 
 
+app.use(
+    session({
+      secret: process.env.SESSION_SECRET,
+      resave: false,
+      saveUninitialized: true,
+    })
+  );
 const app = express();
 // const db = mysql.createConnection({
 //     host:"localhost",

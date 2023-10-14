@@ -18,10 +18,10 @@ const pool = mysql.createPool(process.env.DATABASE_URL);
 router.use(cookieParser());
 router.use(
     expressSession({
-      secret: process.env.SESSION_SECRET,
-      resave: false,
-      saveUninitialized: true,
-    })
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: true,
+      })
   );
 
 router.post('/', async (req, res) => {

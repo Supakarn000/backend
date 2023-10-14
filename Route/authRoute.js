@@ -21,6 +21,8 @@ db.connect((err) => {
     }
 });
 
+
+//register
 router.post("/", (req, res) => {
     const { username, email, password } = req.body;
 

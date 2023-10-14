@@ -21,6 +21,7 @@ router.get("/", (req, res) => {
     });
 });
 
+
 router.post("/", (req, res) => {
     const user = req.body;
 

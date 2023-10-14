@@ -1,5 +1,5 @@
 import express from "express";
-import session from "express-session";
+import expressSession from "express-session";
 import mysql from "mysql";
 import cors from "cors";
 import productsRoute from "./Route/productRoute.js";
@@ -12,20 +12,13 @@ import orderhistoryRoute from './Route/orderhistoryRoute.js';
 import dataRoute from './Route/dataRoute.js';
 
 
-app.use(
-    session({
-      secret: process.env.SESSION_SECRET,
-      resave: false,
-      saveUninitialized: true,
-    })
-  );
 const app = express();
-// const db = mysql.createConnection({
-//     host:"localhost",
-//     user:"root",
-//     password:"",
-//     database:"fullstock"
-// })
+app.use(expressSession({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: true,
+}));
+
 app.use(express.json())
 app.use(cors());
 app.get("/",(req,res)=>{
@@ -48,3 +41,12 @@ app.use("/data",dataRoute);
 app.listen(8000, ()=>{
     console.log("backend working")
 })
+
+
+
+// const db = mysql.createConnection({
+//     host:"localhost",
+//     user:"root",
+//     password:"",
+//     database:"fullstock"
+// })

@@ -1,35 +1,27 @@
 import express from "express";
-import mysql from "mysql2/promise";
-import expressSession from 'express-session';
-import cookieParser from 'cookie-parser';
-
-
-// const db = mysql.createConnection({
-//     host:"localhost",
-//     user:"root",
-//     password:"",
-//     database:"fullstock"
-// })
+import mysql from "mysql2/promise"; 
+import session from "express-session";
 
 const router = express.Router();
+
 const pool = mysql.createPool(process.env.DATABASE_URL);
 
-
-router.use(cookieParser());
 router.use(
-    expressSession({
+    session({
         secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: true,
-      })
-  );
+        cookie: { secure: true },
+    })
+);
 
 router.post('/', async (req, res) => {
+    const ses = req.session.userID;
     try {
+        console.log(ses);
+        console.log(req.session);
         const { userID, cartItems, totalPrice } = req.body;
-        if(!req.session.userID){
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
+
         const order = {
             userID,
             cartItems,

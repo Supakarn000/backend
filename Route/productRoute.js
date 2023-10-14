@@ -31,6 +31,7 @@ router.get("/", (req, res) => {
     });
 });
 
+//create product
 router.post("/", (req, res) => {
     const products = req.body;
 

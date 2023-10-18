@@ -117,4 +117,62 @@ router.get('/best', (req, res) => {
     });
   });
 
+  router.post("/add", (req, res) => {
+    const product = req.body;
+
+    if (typeof product === 'object') {
+        insertSingleProduct(product, res);
+    } else {
+        res.status(400).json({ error: "Invalid data format" });
+    }
+
+    function insertSingleProduct(product, res) {
+        const q = "INSERT INTO products (`name`, `image`, `description`, `type`, `price`, `instock`) VALUES (?, ?, ?, ?, ?, ?)";
+        const values = [
+            product.name,
+            product.image,
+            product.description,
+            product.type,
+            product.price,
+            product.instock
+        ];
+    
+        db.query(q, values, (err, data) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json(err);
+            }
+            return res.status(201).json("Product created");
+        });
+    }
+});
+
+router.delete("/delete/:id", (req, res) => {
+    const productId = req.params.id;
+    
+    const q = "DELETE FROM products WHERE productID = ?";
+
+    db.query(q, [productId], (err, data) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json(err);
+        }
+        return res.status(204).json("Product deleted");
+    });
+});
+
+router.get("/count", (req, res) => {
+    const q = "SELECT COUNT(*) AS productCount FROM products";
+
+    db.query(q, (err, data) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json(err);
+        }
+
+        const productCount = data[0].productCount;
+        return res.json({ productCount });
+    });
+});
+
 export default router;

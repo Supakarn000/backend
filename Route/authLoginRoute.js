@@ -30,14 +30,20 @@ router.post("/", (req, res) => {
             return res.status(401).json({ error: "Username not found" });
         }
         const storedPassword = selectData[0].password;
+        const isAdmin = selectData[0].isAdmin;
+
         if (password !== storedPassword) {
             return res.status(401).json({ error: "Incorrect password" });
         }
         const userId = selectData[0].userID;
 
         req.session.userID = userId;
+        req.session.isAdmin = isAdmin;
+
         res.cookie("userID", userId);
+        res.cookie("isAdmin", isAdmin);
         console.log('Session userID:', req.session.userID);
+        console.log('Session isAdmin:', req.session.isAdmin);
 
         const updateTimestampQuery = "UPDATE users SET last_login = NOW() WHERE userID = ?";
         db.query(updateTimestampQuery, [userId], (updateErr, updateResult) => {
@@ -46,10 +52,11 @@ router.post("/", (req, res) => {
                 return res.status(500).json({ error: "Failed to update login timestamp" });
             }
 
-            return res.status(200).json({ message: "Login successful", userId });
+            return res.status(200).json({ message: "Login successful", userId, isAdmin });
         });
     });
 });
+
 
 router.post('/order', async (req, res) => {
     try {

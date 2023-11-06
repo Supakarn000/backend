@@ -175,4 +175,20 @@ router.get("/count", (req, res) => {
     });
 });
 
+router.get("/search", (req, res) => {
+    const searchQuery = req.query.query;
+
+    const q = "SELECT * FROM products WHERE name LIKE ?";
+
+    const searchValue = `%${searchQuery}%`;
+
+    db.query(q, [searchValue], (err, data) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json(err);
+        }
+        return res.json(data);
+    });
+});
+
 export default router;

@@ -3,16 +3,16 @@ import mysql from "mysql";
 import dotenv from 'dotenv';
 
 
-const db = mysql.createConnection({
-    host:"localhost",
-    user:"root",
-    password:"",
-    database:"fullstock"
-})
+// const db = mysql.createConnection({
+//     host:"localhost",
+//     user:"root",
+//     password:"",
+//     database:"fullstock"
+// })
 
 dotenv.config();
 const router = express.Router();
-//const db = mysql.createConnection(process.env.DATABASE_URL);
+const db = mysql.createConnection(process.env.DATABASE_URL);
 
 router.get("/", (req, res) => {
     const productType = req.query.type;
@@ -24,10 +24,64 @@ router.get("/", (req, res) => {
 
     db.query(q, [productType], (err, data) => {
         if (err) {
-            return err;
+            console.error(err);
+            return res.status(500).json(err);
         }
         return res.json(data);
     });
+});
+
+//create product
+router.post("/", (req, res) => {
+    const products = req.body;
+
+    if (Array.isArray(products)) {
+        insertMultipleProducts(products, res);
+    } else if (typeof products === 'object') {
+        insertSingleProduct(products, res);
+    } else {
+        res.status(400).json({ error: "Invalid data format" });
+    }
+
+    function insertMultipleProducts(products, res) {
+        const q = "INSERT INTO products (`name`, `image`, `description`, `type`, `price`, `instock`) VALUES ?";
+        const values = products.map(product => [
+            product.name,
+            product.image,
+            product.description,
+            product.type,
+            product.price,
+            product.instock
+        ]);
+
+        db.query(q, [values], (err, data) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json(err);
+            }
+            return res.status(201).json("Products created");
+        });
+    }
+
+    function insertSingleProduct(product, res) {
+        const q = "INSERT INTO products (`name`, `image`, `description`, `type`, `price`, `instock`) VALUES (?, ?, ?, ?, ?, ?)";
+        const values = [
+            product.name,
+            product.image,
+            product.description,
+            product.type,
+            product.price,
+            product.instock
+        ];
+
+        db.query(q, values, (err, data) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json(err);
+            }
+            return res.status(201).json("Product created");
+        });
+    }
 });
 
 router.get("/random", (req, res) => {
@@ -67,12 +121,12 @@ router.get('/best', (req, res) => {
     const product = req.body;
 
     if (typeof product === 'object') {
-        insertproduct(product, res);
+        insertSingleProduct(product, res);
     } else {
-        res.status(500)
+        res.status(400).json({ error: "Invalid data format" });
     }
 
-    function insertproduct(product, res) {
+    function insertSingleProduct(product, res) {
         const q = "INSERT INTO products (`name`, `image`, `description`, `type`, `price`, `instock`) VALUES (?, ?, ?, ?, ?, ?)";
         const values = [
             product.name,
@@ -88,7 +142,7 @@ router.get('/best', (req, res) => {
                 console.error(err);
                 return res.status(500).json(err);
             }
-            return res.status(200).json("Product created");
+            return res.status(201).json("Product created");
         });
     }
 });
@@ -103,7 +157,7 @@ router.delete("/delete/:id", (req, res) => {
             console.error(err);
             return res.status(500).json(err);
         }
-        return res.status(200).json("Product deleted");
+        return res.status(204).json("Product deleted");
     });
 });
 
@@ -112,6 +166,7 @@ router.get("/count", (req, res) => {
 
     db.query(q, (err, data) => {
         if (err) {
+            console.error(err);
             return res.status(500).json(err);
         }
 
@@ -129,33 +184,10 @@ router.get("/search", (req, res) => {
 
     db.query(q, [searchValue], (err, data) => {
         if (err) {
+            console.error(err);
             return res.status(500).json(err);
         }
         return res.json(data);
-    });
-});
-
-router.put("/update/:id", (req, res) => {
-    const productId = req.params.id;
-    const updatedProduct = req.body;
-
-    const q = "UPDATE products SET name = ?, image = ?, description = ?, type = ?, price = ?, instock = ? WHERE productID = ?";
-
-    const values = [
-        updatedProduct.name,
-        updatedProduct.image,
-        updatedProduct.description,
-        updatedProduct.type,
-        updatedProduct.price,
-        updatedProduct.instock,
-        productId
-    ];
-
-    db.query(q, values, (err, data) => {
-        if (err) {
-            return err;
-        }
-        return res.status(200).json("Product updated");
     });
 });
 

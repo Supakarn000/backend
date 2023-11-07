@@ -18,15 +18,16 @@ router.get('/', (req, res) => {
     const userId = req.headers.authorization;
 
     if (!userId) {
-        return res.status(404)
+        return res.status(404).json({ error: 'error' });
     }
     const userID = userId;
 
-    const orderhistory = 'SELECT * FROM orders WHERE userID = ?';
+    const selectOrdersQuery = 'SELECT * FROM orders WHERE userID = ?';
 
-    db.query(orderhistory, [userID], (err, results) => {
+    db.query(selectOrdersQuery, [userID], (err, results) => {
         if (err) {
-            res.status(500)
+            console.error('Error fetching order history:', err);
+            res.status(500).json({ error: 'error' });
         } else {
             res.status(200).json(results);
         }

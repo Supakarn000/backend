@@ -28,7 +28,7 @@ router.post("/", (req, res) => {
     if (typeof user === 'object') {
         insertSingleUser(user, res);
     } else {
-        res.status(400).json({ error: "Invalid data format" });
+        res.status(400).json({error: "error"})
     }
 
     function insertSingleUser(user, res) {
@@ -42,10 +42,9 @@ router.post("/", (req, res) => {
 
         db.query(q, values, (err, data) => {
             if (err) {
-                console.error(err);
-                return res.status(500).json(err);
+                return json(err);
             }
-            return res.status(201).json("User created");
+            return res.status(200).json("User created");
         });
     }
 });
@@ -71,20 +70,16 @@ router.delete("/:id", (req, res) => {
     
     db.query(q, [userId], (err, result) => {
       if (err) {
-        console.error(err);
-        return res.status(500).json({ error: "Failed to delete user" });
+        return err
       }
       if (result.affectedRows > 0) {
-        return res.status(200).json({ message: "User deleted successfully" });
+        return res.status(200).json({ message: "deleted" });
       } else {
-        return res.status(404).json({ error: "User not found" });
+        return err
       }
     });
   });
 
-
-
-  
 
 
 export default router;

@@ -23,49 +23,34 @@ db.connect((err) => {
 
 
 //register
-router.post("/", (req, res) => {
+router.post("/", (req,res) => {
     const { username, email, password } = req.body;
-
-    function insertSingleUser(username, email, password, res) {
-        const isAdmin = false;
-
-        const q = "INSERT INTO users (`username`, `email`, `password`, `isAdmin`) VALUES (?, ?, ?, ?)";
-        const values = [username, email, password, isAdmin];
-
-        db.query(q, values, (insertErr, insertResult) => {
-            if (insertErr) {
-                console.error("Error inserting user: " + insertErr);
-                return res.status(500).json({ error: "Failed to register user" });
-            }
-            console.log("User registered successfully");
-            res.status(200).json({ message: "User registered successfully" });
-        });
+  
+    if (typeof req.body !== 'object') {
+      return res.status(400).json({ error: "Invalid request data" });
     }
 
-    if (typeof req.body === 'object') {
-        db.query("SELECT * FROM users WHERE email = ?", [email], (selectEmailErr, selectEmailData) => {
-            if (selectEmailErr) {
-                console.error("Error checking email: " + selectEmailErr);
-                return res.status(500).json({ error: "Failed to check email" });
-            }
-            if (selectEmailData.length > 0) {
-                return res.status(400).json({ error: "Email already in use" });
-            }
-            db.query("SELECT * FROM users WHERE username = ?", [username], (selectUsernameErr, selectUsernameData) => {
-                if (selectUsernameErr) {
-                    console.error("Error checking username: " + selectUsernameErr);
-                    return res.status(500).json({ error: "Failed to check username" });
-                }
-                if (selectUsernameData.length > 0) {
-                    return res.status(400).json({ error: "Username already in use" });
-                }
-                insertSingleUser(username, email, password, res);
-            });
-        });
-    } else {
-        res.status(400).json({ error: "Invalid data format" });
-    }
-});
+    db.query("SELECT * FROM users WHERE email = ? OR username = ?", [email, username], (err, results) => {
+      if (err) {
+        return json({ error: "Database error" });
+      }
+      if (results.length > 0) {
+        return json({ error: "Email or username already in use" });
+      }
+  
+      const isAdmin = false;
+      const insertQuery = "INSERT INTO users (username, email, password, isAdmin) VALUES (?, ?, ?, ?)";
+      const values = [username, email, password, isAdmin];
+  
+      db.query(insertQuery, values, (err) => {
+        if (err) {
+          return json(err);
+        }
+  
+        res.status(200).json({ message: "User registered successful" });
+      });
+    });
+  });
 
 
 export default router;

@@ -21,19 +21,18 @@ router.use(cookieParser());
 router.post("/", (req, res) => {
     const { username, password } = req.body;
 
-    db.query("SELECT * FROM users WHERE username = ?", [username], (selectErr, selectData) => {
-        if (selectErr) {
-            console.error("Error checking username: " + selectErr);
-            return res.status(500).json({ error: "Failed to check username" });
+    db.query("SELECT * FROM users WHERE username = ?", [username], (err, selectData) => {
+        if (err) {
+            return res.status(500).json(err);
         }
         if (selectData.length === 0) {
-            return res.status(401).json({ error: "Username not found" });
+            return res.status(500).json(err);
         }
         const storedPassword = selectData[0].password;
         const isAdmin = selectData[0].isAdmin;
 
         if (password !== storedPassword) {
-            return res.status(401).json({ error: "Incorrect password" });
+            return res.status(404).json(err)
         }
         const userId = selectData[0].userID;
 
@@ -45,62 +44,15 @@ router.post("/", (req, res) => {
         console.log('Session userID:', req.session.userID);
         console.log('Session isAdmin:', req.session.isAdmin);
 
-        const updateTimestampQuery = "UPDATE users SET last_login = NOW() WHERE userID = ?";
-        db.query(updateTimestampQuery, [userId], (updateErr, updateResult) => {
+        const updateTimestamp = "UPDATE users SET last_login = NOW() WHERE userID = ?";
+        db.query(updateTimestamp, [userId], (updateErr) => {
             if (updateErr) {
-                console.error("Error updating last_login timestamp: " + updateErr);
-                return res.status(500).json({ error: "Failed to update login timestamp" });
+                return updateErr
             }
 
             return res.status(200).json({ message: "Login successful", userId, isAdmin });
         });
     });
-});
-
-
-router.post('/order', async (req, res) => {
-    try {
-        console.log('Session userID:', req.session.userID);
-        const { userID, cartItems, totalPrice } = req.body;
-        if (!req.session.userID) {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
-        const order = {
-            userID,
-            cartItems,
-            totalPrice,
-            orderDate: new Date(),
-        };
-
-        const insertQuery = "INSERT INTO orders (userID, cartItems, totalPrice, orderDate) VALUES (?, ?, ?, ?)";
-        const decrement = "UPDATE products SET instock = instock - 1 WHERE productID = ?";
-        const increment = "UPDATE products SET sold = sold + 1 WHERE productID = ?";
-
-        const connection = await pool.getConnection();
-
-        try {
-            await connection.beginTransaction();
-
-            const [orderResult] = await connection.query(insertQuery, [order.userID, JSON.stringify(order.cartItems), order.totalPrice, order.orderDate]);
-
-            for (const cartItem of order.cartItems) {
-                await connection.query(decrement, [cartItem.productID]);
-                await connection.query(increment, [cartItem.productID]);
-            }
-
-            await connection.commit();
-            connection.release();
-
-            return res.status(201).json({ message: 'Order created successfully', order: orderResult });
-        } catch (error) {
-            await connection.rollback();
-            connection.release();
-            throw error;
-        }
-    } catch (error) {
-        console.error('Error creating order:', error);
-        res.status(500).json({ message: 'Error creating order' });
-    }
 });
 
 export default router;

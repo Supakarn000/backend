@@ -18,8 +18,8 @@ router.use(
 router.post('/', async (req, res) => {
     const ses = req.session.userID;
     try {
-        console.log(ses);
-        console.log(req.session);
+        //console.log(ses);
+        //console.log(req.session);
         const { userID, cartItems, totalPrice } = req.body;
 
         const order = {
@@ -48,15 +48,14 @@ router.post('/', async (req, res) => {
             await connection.commit();
             connection.release();
 
-            return res.status(201).json({ message: 'Order created successfully', order: orderResult });
+            return res.status(200).json({ message: 'Order created successfully', order: orderResult });
         } catch (error) {
             await connection.rollback();
             connection.release();
             throw error;
         }
     } catch (error) {
-        console.error('Error creating order:', error);
-        res.status(500).json({ message: 'Error creating order' });
+        res.status(500)
     }
 });
 
